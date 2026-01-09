@@ -284,18 +284,17 @@ function toggleAdminMode() {
                         </div>
                     </td>
                     <td class="p-8">
-                        <div class="flex items-center gap-5">
-                            <div class="relative">
-                                <div class="w-16 h-16 rounded-2xl border-2 ${rank === 1 ? 'border-yellow-500 animate-pulse' : 'border-white/10'} p-1 bg-zinc-900 shadow-2xl">
-                                    <img src="https://i.pravatar.cc/150?u=${item.id}" class="rounded-xl">
-                                </div>
-                            </div>
-                            <div>
-                                <div class="text-white font-black text-lg tracking-tight flex items-center">${item.name} ${badge}</div>
-                                <div class="text-[9px] border border-yellow-500/40 text-yellow-500 px-2 py-0.5 rounded-full mt-1 uppercase font-bold inline-block">${item.branch}</div>
-                            </div>
-                        </div>
-                    </td>
+    <div class="flex items-center gap-5">
+        <div>
+            <div class="text-white font-black text-xl tracking-tight flex items-center">
+                ${item.name} ${badge}
+            </div>
+            <div class="text-[9px] border border-yellow-500/40 text-yellow-500 px-2 py-0.5 rounded-full mt-1 uppercase font-bold inline-block">
+                ${item.branch}
+            </div>
+        </div>
+    </div>
+</td>
                     <td class="p-8 text-center">
                         <div class="text-4xl font-num-3d ${rank === 1 ? 'title-gold' : 'text-gray-100'}">${item.total.toLocaleString()}</div>
                     </td>
@@ -349,4 +348,5 @@ function toggleAdminMode() {
         startTypewriter(); // 启动打字机
     </script>
 </body>
+
 </html>
