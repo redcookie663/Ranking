@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EWG 巅峰榜 - 2026 荣耀动态版</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Montserrat:wght@300;400;600;800;900&family=Inter:wght@900&display=swap" rel="stylesheet">
+    <style>
+        :root { --gold: #f8b500; --silver: #cbd5e1; --bronze: #cd7f32; --cyan: #22d3ee; --bright-cyan: #00ffff; --bg: #030303; }
+        body { background-color: var(--bg); color: #e5e7eb; font-family: 'Montserrat', sans-serif; letter-spacing: 0.02em; overflow-x: hidden; }
+        
+        .font-gold { font-family: 'Cinzel', serif; }
+        .font-num-3d { 
+            font-family: 'Inter', sans-serif; font-weight: 900; letter-spacing: -1px;
+            text-shadow: 1px 1px 0px #555, 2px 2px 0px #333, 4px 4px 10px rgba(0,0,0,0.8);
+        }
+
+        .title-gold {
+            background: linear-gradient(to bottom, #fceabb 0%, #fccd4d 50%, #f8b500 51%, #fbdf93 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 0 20px rgba(248, 181, 0, 0.4));
+        }
+
+        .glass-panel { 
+            background: linear-gradient(165deg, rgba(22,22,22,0.8) 0%, rgba(5,5,5,0.9) 100%);
+            border: 1px solid rgba(248, 181, 0, 0.15); border-radius: 20px; backdrop-filter: blur(12px);
+        }
+
+        /* 荣耀前三名特显 */
+        .rank-row-1 { 
+            background: linear-gradient(90deg, rgba(248,181,0,0.25) 0%, rgba(248,181,0,0.05) 50%, transparent 100%) !important; 
+            border-left: 6px solid var(--gold) !important;
+            box-shadow: inset 10px 0 20px rgba(248,181,0,0.1);
+        }
+        .rank-row-2 { background: linear-gradient(90deg, rgba(203,213,225,0.15) 0%, transparent 100%) !important; border-left: 6px solid var(--silver) !important; }
+        .rank-row-3 { background: linear-gradient(90deg, rgba(205,127,50,0.15) 0%, transparent 100%) !important; border-left: 6px solid var(--bronze) !important; }
+
+        /* 数值调色 */
+        .val-low { color: var(--cyan); font-weight: 600; } 
+        .val-mid { color: var(--gold); font-weight: 700; text-shadow: 0 0 8px rgba(248, 181, 0, 0.3); } 
+        .val-high { 
+            color: var(--bright-cyan); font-weight: 900; 
+            filter: drop-shadow(0 0 12px rgba(0, 255, 255, 0.7));
+        }
+
+        @keyframes crown-float { 0%, 100% { transform: translateY(0) scale(1.1); } 50% { transform: translateY(-5px) scale(1.3); } }
+        .crown-icon { display: inline-block; animation: crown-float 1.5s infinite ease-in-out; margin-left: 6px; }
+
+        .btn-filter { background: #111; border: 1px solid #333; color: #666; transition: 0.4s; cursor: pointer; border-radius: 12px; font-weight: 600; }
+        .btn-filter.active { background: var(--gold); color: black; font-weight: 800; box-shadow: 0 0 20px rgba(248,181,0,0.4); border-color: var(--gold); }
+
+        /* Admin UI */
+        .admin-btn-fixed { position: fixed; bottom: 20px; left: 20px; z-index: 100; }
+        .admin-input { background: rgba(255,255,255,0.1); border: 1px solid var(--gold); color: #fff; width: 90px; text-align: center; border-radius: 6px; padding: 4px; font-size: 14px; outline: none; }
+        .admin-mode-active .view-mode { display: none; }
+        .admin-mode-active .edit-mode { display: block; }
+        .edit-mode { display: none; }
+
+        /* 打字机光标效果 (可选) */
+        #motive-quote::after { content: '|'; animation: blink 0.7s infinite; margin-left: 4px; color: var(--gold); }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+    </style>
+</head>
+<body class="p-4 md:p-10 pb-24">
+
+    <div class="admin-btn-fixed">
+        <button onclick="toggleAdminMode()" id="adminToggleBtn" class="bg-zinc-900/90 backdrop-blur hover:bg-yellow-600 text-gray-500 hover:text-black transition-all px-5 py-3 rounded-2xl font-bold text-[10px] uppercase tracking-widest border border-white/10 shadow-2xl">
+            ⚙️ Admin Mode
+        </button>
+    </div>
+
+    <div class="max-w-7xl mx-auto text-center mb-10">
+        <div class="inline-block px-6 py-1.5 rounded-full border border-yellow-600/30 bg-yellow-600/5 text-yellow-500 text-[10px] uppercase tracking-[0.3em] mb-6">● Official Performance Ranking</div>
+        <h1 class="text-7xl font-gold title-gold font-black mb-4 uppercase tracking-tighter">EWG 巅峰榜</h1>
+        
+        <div class="h-6 flex justify-center items-center mb-8">
+            <div id="motive-quote" class="text-gray-400 font-medium italic tracking-widest text-[11px] opacity-80 uppercase min-h-[1em]"></div>
+        </div>
+
+        <div class="flex justify-center gap-2" id="timeFilters">
+            <button class="btn-filter active px-8 py-2 text-[10px] uppercase tracking-widest" data-time="MONTHLY">Monthly</button>
+            <button class="btn-filter px-8 py-2 text-[10px] uppercase tracking-widest" data-time="QUARTERLY">Quarterly</button>
+            <button class="btn-filter px-8 py-2 text-[10px] uppercase tracking-widest" data-time="YEARLY">Yearly</button>
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+        <div class="glass-panel p-8">
+            <span class="text-gray-500 text-[10px] font-semibold tracking-widest uppercase italic">Total Sales Volume</span>
+            <div class="mt-4">
+                <div class="text-6xl font-num-3d text-white tracking-tighter italic" id="stat-total-sales">0</div>
+                <div class="text-[10px] text-green-400 mt-3 font-bold uppercase tracking-widest" id="period-label">MONTHLY PERFORMANCE</div>
+            </div>
+        </div>
+        
+        <div class="glass-panel p-8 border-t-4 border-t-cyan-500">
+            <span class="text-cyan-500 text-[10px] font-semibold tracking-widest uppercase italic">Top Driving Product</span>
+            <div class="mt-4">
+                <div id="eff-product-name" class="text-3xl font-black text-white italic tracking-tighter uppercase">--</div>
+                <div class="flex items-center gap-2 mt-3">
+                    <span class="text-gray-500 text-[10px] font-bold uppercase">Contribution:</span>
+                    <span id="eff-product-value" class="font-num-3d text-cyan-400 text-xl tracking-normal">+$0</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="glass-panel p-8">
+            <span class="text-gray-500 text-[10px] font-semibold tracking-widest uppercase italic">Qualified Agents</span>
+            <div class="mt-4 flex items-baseline gap-2">
+                <div class="text-6xl font-num-3d text-white" id="stat-active-agents">0</div>
+                <div class="text-[10px] text-yellow-500 font-bold uppercase tracking-widest">Active</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto mb-8">
+        <div class="flex gap-3 bg-zinc-900/50 p-1.5 rounded-2xl border border-white/5 inline-flex" id="branchFilters">
+            <button class="btn-filter active px-6 py-2.5 text-[10px] uppercase" data-filter="ALL">All Units</button>
+            <button class="btn-filter px-6 py-2.5 text-[10px] uppercase" data-filter="IPOH">Ipoh</button>
+            <button class="btn-filter px-6 py-2.5 text-[10px] uppercase" data-filter="JB">JB</button>
+            <button class="btn-filter px-6 py-2.5 text-[10px] uppercase" data-filter="HQ">HQ</button>
+            <button class="btn-filter px-6 py-2.5 text-[10px] uppercase" data-filter="ACA">ACA</button>
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto glass-panel overflow-hidden border-white/5 shadow-2xl" id="tableContainer">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left min-w-[1050px]">
+                <thead>
+                    <tr class="text-[11px] text-gray-400 uppercase tracking-[0.2em] border-b border-white/5 bg-white/5">
+                        <th class="p-8 text-center w-24">Rank</th>
+                        <th class="p-8">Agent Information</th>
+                        <th class="p-8 text-center">Total Sales</th>
+                        <th class="p-8 text-center">Personal Loan</th>
+                        <th class="p-8 text-center">SME Loan</th>
+                        <th class="p-8 text-center">COP</th>
+                        <th class="p-8 text-right w-48">Status</th>
+                    </tr>
+                </thead>
+                <tbody id="leaderboardBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const quotes = [
+            "LIMITS, LIKE FEARS, ARE OFTEN JUST AN ILLUSION.",
+            "SUCCESS IS THE SUM OF SMALL EFFORTS, REPEATED DAY IN AND DAY OUT.",
+            "DON'T STOP WHEN YOU'RE TIRED. STOP WHEN YOU'RE DONE.",
+            "EXCELLENCE IS NOT A SKILL. IT IS AN ATTITUDE.",
+            "THE ONLY WAY TO PREDICT THE FUTURE IS TO CREATE IT."
+        ];
+
+        let db = {
+            MONTHLY: [
+                { id: 1, name: "Amus Khoo", branch: "HQ", pLoan: 1250000, sLoan: 850000, cop: 321900, status: "hot" },
+                { id: 2, name: "CK Liow", branch: "IPOH", pLoan: 28400, sLoan: 45000, cop: 25200, status: "stable" },
+                { id: 3, name: "Andrew Law", branch: "ACA", pLoan: 15800, sLoan: 52000, cop: 7700, status: "stable" },
+                { id: 4, name: "Jessie Lok", branch: "HQ", pLoan: 12000, sLoan: 30000, cop: 10000, status: "hot" }
+            ],
+            QUARTERLY: [
+                { id: 1, name: "Amus Khoo", branch: "HQ", pLoan: 250000, sLoan: 150000, cop: 65000, status: "hot" }
+            ],
+            YEARLY: [
+                { id: 1, name: "Amus Khoo", branch: "HQ", pLoan: 1200000, sLoan: 950000, cop: 480000, status: "hot" }
+            ]
+        };
+
+        let currentBranch = 'ALL';
+        let currentTime = 'MONTHLY';
+        let isAdminMode = false;
+
+        // 打字机逻辑
+        let charIndex = 0;
+        let currentQuote = "";
+        function startTypewriter() {
+            const container = document.getElementById('motive-quote');
+            currentQuote = quotes[Math.floor(Math.random() * quotes.length)];
+            container.innerHTML = "";
+            charIndex = 0;
+            type();
+        }
+
+        function type() {
+            const container = document.getElementById('motive-quote');
+            if (charIndex < currentQuote.length) {
+                container.innerHTML += currentQuote.charAt(charIndex);
+                charIndex++;
+                setTimeout(type, 50); // 打字速度 50ms
+            }
+        }
+
+        // 在变量定义区可以修改默认密码
+const ADMIN_PASSWORD = "123456"; 
+
+function toggleAdminMode() {
+    // 逻辑：仅在尝试从 "关闭" 切换到 "开启" 时要求输入密码
+    if (!isAdminMode) {
+        const input = prompt("请输入管理员密码以进入编辑模式：");
+        if (input !== ADMIN_PASSWORD) {
+            alert("密码错误，权限验证失败！");
+            return; // 拦截，不执行后续逻辑
+        }
+    }
+
+    // --- 以下为原始逻辑，禁止篡改部分 ---
+    isAdminMode = !isAdminMode;
+    const btn = document.getElementById('adminToggleBtn');
+    const container = document.getElementById('tableContainer');
+    if(isAdminMode) {
+        btn.innerText = "💾 Save & Apply Rules";
+        btn.classList.replace('bg-zinc-900/90', 'bg-green-600');
+        container.classList.add('admin-mode-active');
+    } else {
+        btn.innerText = "⚙️ Admin Mode";
+        btn.classList.replace('bg-green-600', 'bg-zinc-900/90');
+        container.classList.remove('admin-mode-active');
+        renderTable(); 
+    }
+}
+        function updateScore(id, field, value) {
+            const agent = db[currentTime].find(a => a.id === id);
+            if(agent) agent[field] = parseInt(value) || 0;
+        }
+
+        function getValColor(val) {
+            const n = parseInt(val);
+            if (n >= 80000) return 'val-high';
+            if (n >= 25000) return 'val-mid';
+            return 'val-low';
+        }
+
+        function renderTable() {
+            const container = document.getElementById('leaderboardBody');
+            const dataSet = db[currentTime];
+            
+            let minThreshold = 0;
+            if (currentTime === 'QUARTERLY') minThreshold = 30000;
+            if (currentTime === 'YEARLY') minThreshold = 120000;
+
+            let filtered = dataSet
+                .map(i => ({...i, total: i.pLoan + i.sLoan + i.cop}))
+                .filter(i => (currentBranch === 'ALL' || i.branch === currentBranch) && (i.total >= minThreshold))
+                .sort((a, b) => b.total - a.total);
+
+            const totalSum = filtered.reduce((s, i) => s + i.total, 0);
+            document.getElementById('stat-total-sales').innerText = totalSum.toLocaleString();
+            document.getElementById('stat-active-agents').innerText = filtered.length;
+            document.getElementById('period-label').innerText = currentTime + " TOTAL SALES";
+
+            const sumP = filtered.reduce((s, i) => s + i.pLoan, 0);
+            const sumS = filtered.reduce((s, i) => s + i.sLoan, 0);
+            const sumC = filtered.reduce((s, i) => s + i.cop, 0);
+            const effs = [{n: 'Personal Loan', v: sumP}, {n: 'SME Loan', v: sumS}, {n: 'COP', v: sumC}];
+            const topEff = effs.sort((a,b) => b.v - a.v)[0];
+            document.getElementById('eff-product-name').innerText = topEff.v > 0 ? topEff.n : "No Data";
+            document.getElementById('eff-product-value').innerText = "+$" + topEff.v.toLocaleString();
+
+            const maxP = Math.max(...dataSet.map(i => i.pLoan));
+            const maxS = Math.max(...dataSet.map(i => i.sLoan));
+            const maxC = Math.max(...dataSet.map(i => i.cop));
+
+            container.innerHTML = filtered.map((item, index) => {
+                const rank = index + 1;
+                let rankClass = '';
+                let badge = '';
+                
+                if(rank === 1) { 
+                    rankClass = 'rank-row-1'; 
+                    badge = '<span class="text-[10px] bg-yellow-500 text-black px-2 py-0.5 rounded-full font-black ml-2 shadow-lg">CHAMPION</span>';
+                }
+                else if(rank === 2) rankClass = 'rank-row-2';
+                else if(rank === 3) rankClass = 'rank-row-3';
+                
+                const medal = rank === 1 ? '🥇' : (rank === 2 ? '🥈' : (rank === 3 ? '🥉' : ''));
+
+                return `
+                <tr class="border-b border-white/5 transition-all ${rankClass}">
+                    <td class="p-8 text-center">
+                        <div class="flex flex-col items-center">
+                            <div class="text-3xl font-num-3d ${rank <= 3 ? 'text-white' : 'text-zinc-700'}">${rank.toString().padStart(2, '0')}</div>
+                            <div class="text-xl mt-1">${medal}</div>
+                        </div>
+                    </td>
+                    <td class="p-8">
+                        <div class="flex items-center gap-5">
+                            <div class="relative">
+                                <div class="w-16 h-16 rounded-2xl border-2 ${rank === 1 ? 'border-yellow-500 animate-pulse' : 'border-white/10'} p-1 bg-zinc-900 shadow-2xl">
+                                    <img src="https://i.pravatar.cc/150?u=${item.id}" class="rounded-xl">
+                                </div>
+                            </div>
+                            <div>
+                                <div class="text-white font-black text-lg tracking-tight flex items-center">${item.name} ${badge}</div>
+                                <div class="text-[9px] border border-yellow-500/40 text-yellow-500 px-2 py-0.5 rounded-full mt-1 uppercase font-bold inline-block">${item.branch}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="p-8 text-center">
+                        <div class="text-4xl font-num-3d ${rank === 1 ? 'title-gold' : 'text-gray-100'}">${item.total.toLocaleString()}</div>
+                    </td>
+                    
+                    <td class="px-4 text-center text-lg italic whitespace-nowrap">
+                        <div class="view-mode ${getValColor(item.pLoan)}">
+                            ${item.pLoan.toLocaleString()} ${item.pLoan === maxP && item.pLoan > 0 ? '<span class="crown-icon text-xl">👑</span>' : ''}
+                        </div>
+                        <div class="edit-mode"><input type="number" class="admin-input" value="${item.pLoan}" oninput="updateScore(${item.id}, 'pLoan', this.value)"></div>
+                    </td>
+                    <td class="px-4 text-center text-lg italic whitespace-nowrap">
+                        <div class="view-mode ${getValColor(item.sLoan)}">
+                            ${item.sLoan.toLocaleString()} ${item.sLoan === maxS && item.sLoan > 0 ? '<span class="crown-icon text-xl">👑</span>' : ''}
+                        </div>
+                        <div class="edit-mode"><input type="number" class="admin-input" value="${item.sLoan}" oninput="updateScore(${item.id}, 'sLoan', this.value)"></div>
+                    </td>
+                    <td class="px-4 text-center text-lg italic whitespace-nowrap">
+                        <div class="view-mode ${getValColor(item.cop)}">
+                            ${item.cop.toLocaleString()} ${item.cop === maxC && item.cop > 0 ? '<span class="crown-icon text-xl">👑</span>' : ''}
+                        </div>
+                        <div class="edit-mode"><input type="number" class="admin-input" value="${item.cop}" oninput="updateScore(${item.id}, 'cop', this.value)"></div>
+                    </td>
+
+                    <td class="p-8 text-right whitespace-nowrap">
+                        <span class="${item.status === 'hot' ? 'bg-yellow-500 text-black shadow-[0_0_20px_rgba(248,181,0,0.3)]' : 'bg-zinc-800 text-zinc-500'} px-5 py-2 rounded-xl text-[10px] font-black uppercase inline-block">
+                            ${item.status === 'hot' ? '🔥 Hand on Fire' : 'Stable'}
+                        </span>
+                    </td>
+                </tr>
+                `;
+            }).join('');
+        }
+
+        // 事件监听
+        document.querySelectorAll('#branchFilters button').forEach(btn => btn.onclick = () => {
+            document.querySelectorAll('#branchFilters button').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            currentBranch = btn.dataset.filter;
+            renderTable();
+        });
+
+        document.querySelectorAll('#timeFilters button').forEach(btn => btn.onclick = () => {
+            document.querySelectorAll('#timeFilters button').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            currentTime = btn.dataset.time;
+            renderTable();
+        });
+
+        // 初始化
+        renderTable();
+        startTypewriter(); // 启动打字机
+    </script>
+</body>
+</html>
