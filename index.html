@@ -234,39 +234,48 @@ function toggleAdminMode() {
 
         function renderTable() {
             const container = document.getElementById('leaderboardBody');
-            const dataSet = db[currentTime];
+            const dataSet = db[currentTime] || []; // 确保 dataSet 至少是个空数组，防止报错
             
             let minThreshold = 0;
             if (currentTime === 'QUARTERLY') minThreshold = 30000;
             if (currentTime === 'YEARLY') minThreshold = 120000;
 
+            // 1. 过滤逻辑：增加 .trim() 确保分支字符串匹配不受空格影响
             let filtered = dataSet
-                .map(i => ({...i, total: i.pLoan + i.sLoan + i.cop}))
-                .filter(i => (currentBranch === 'ALL' || i.branch === currentBranch) && (i.total >= minThreshold))
+                .map(i => ({...i, total: (i.pLoan || 0) + (i.sLoan || 0) + (i.cop || 0)}))
+                .filter(i => {
+                    const branchMatch = (currentBranch === 'ALL' || i.branch.trim() === currentBranch.trim());
+                    const scoreMatch = (i.total >= minThreshold);
+                    return branchMatch && scoreMatch;
+                })
                 .sort((a, b) => b.total - a.total);
 
+            // 2. 更新上方统计卡片
             const totalSum = filtered.reduce((s, i) => s + i.total, 0);
             document.getElementById('stat-total-sales').innerText = totalSum.toLocaleString();
             document.getElementById('stat-active-agents').innerText = filtered.length;
             document.getElementById('period-label').innerText = currentTime + " TOTAL SALES";
 
-            const sumP = filtered.reduce((s, i) => s + i.pLoan, 0);
-            const sumS = filtered.reduce((s, i) => s + i.sLoan, 0);
-            const sumC = filtered.reduce((s, i) => s + i.cop, 0);
+            const sumP = filtered.reduce((s, i) => s + (i.pLoan || 0), 0);
+            const sumS = filtered.reduce((s, i) => s + (i.sLoan || 0), 0);
+            const sumC = filtered.reduce((s, i) => s + (i.cop || 0), 0);
             const effs = [{n: 'Personal Loan', v: sumP}, {n: 'SME Loan', v: sumS}, {n: 'COP', v: sumC}];
             const topEff = effs.sort((a,b) => b.v - a.v)[0];
-            document.getElementById('eff-product-name').innerText = topEff.v > 0 ? topEff.n : "No Data";
-            document.getElementById('eff-product-value').innerText = "+$" + topEff.v.toLocaleString();
+            document.getElementById('eff-product-name').innerText = topEff && topEff.v > 0 ? topEff.n : "No Data";
+            document.getElementById('eff-product-value').innerText = "+$" + (topEff ? topEff.v.toLocaleString() : "0");
 
-            const maxP = Math.max(...dataSet.map(i => i.pLoan));
-            const maxS = Math.max(...dataSet.map(i => i.sLoan));
-            const maxC = Math.max(...dataSet.map(i => i.cop));
+            // 3. 安全计算最大值（核心修正：防止 dataSet 为空时导致脚本崩溃）
+            const maxP = dataSet.length > 0 ? Math.max(...dataSet.map(i => i.pLoan || 0)) : 0;
+            const maxS = dataSet.length > 0 ? Math.max(...dataSet.map(i => i.sLoan || 0)) : 0;
+            const maxC = dataSet.length > 0 ? Math.max(...dataSet.map(i => i.cop || 0)) : 0;
 
+            // 4. 渲染表格行
             container.innerHTML = filtered.map((item, index) => {
                 const rank = index + 1;
                 let rankClass = '';
                 let badge = '';
                 
+                // 冠军逻辑：Shawn 作为 IPOH 第一名时会自动获得勋章
                 if(rank === 1) { 
                     rankClass = 'rank-row-1'; 
                     badge = '<span class="text-[10px] bg-yellow-500 text-black px-2 py-0.5 rounded-full font-black ml-2 shadow-lg">CHAMPION</span>';
@@ -285,17 +294,13 @@ function toggleAdminMode() {
                         </div>
                     </td>
                     <td class="p-8">
-    <div class="flex items-center gap-5">
-        <div>
-            <div class="text-white font-black text-xl tracking-tight flex items-center">
-                ${item.name} ${badge}
-            </div>
-            <div class="text-[9px] border border-yellow-500/40 text-yellow-500 px-2 py-0.5 rounded-full mt-1 uppercase font-bold inline-block">
-                ${item.branch}
-            </div>
-        </div>
-    </div>
-</td>
+                        <div class="flex items-center gap-5">
+                            <div>
+                                <div class="text-white font-black text-xl tracking-tight flex items-center">${item.name} ${badge}</div>
+                                <div class="text-[9px] border border-yellow-500/40 text-yellow-500 px-2 py-0.5 rounded-full mt-1 uppercase font-bold inline-block">${item.branch}</div>
+                            </div>
+                        </div>
+                    </td>
                     <td class="p-8 text-center">
                         <div class="text-4xl font-num-3d ${rank === 1 ? 'title-gold' : 'text-gray-100'}">${item.total.toLocaleString()}</div>
                     </td>
@@ -351,6 +356,7 @@ function toggleAdminMode() {
 </body>
 
 </html>
+
 
 
 
