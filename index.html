@@ -248,8 +248,8 @@ function toggleAdminMode() {
             const dataSet = db[currentTime] || []; // 确保 dataSet 至少是个空数组，防止报错
             
             let minThreshold = 0;
-            if (currentTime === 'QUARTERLY') minThreshold = 30000;
-            if (currentTime === 'YEARLY') minThreshold = 120000;
+            if (currentTime === 'QUARTERLY') minThreshold = 1000;
+            if (currentTime === 'YEARLY') minThreshold = 1000;
 
             // 1. 过滤逻辑：增加 .trim() 确保分支字符串匹配不受空格影响
             let filtered = dataSet
@@ -367,6 +367,7 @@ function toggleAdminMode() {
 </body>
 
 </html>
+
 
 
 
